@@ -1,75 +1,8 @@
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: podinfo
-  namespace: demo
-  labels:
-    app: podinfo
-  annotations:
-    fluxcd.io/automated: "true"
-    fluxcd.io/tag.init: regex:^3.10.*
-    fluxcd.io/tag.podinfod: semver:~3.1
-spec:
-  strategy:
-    rollingUpdate:
-      maxUnavailable: 0
-    type: RollingUpdate
-  selector:
-    matchLabels:
-      app: podinfo
-  template:
-    metadata:
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "8080"
-      labels:
-        app: podinfo
-    spec:
-      initContainers:
-      - name: init
-        image: alpine:3.10
-        command:
-        - sleep
-        - "1"
-      containers:
-      - name: podinfod
-        image: stefanprodan/podinfo:3.1.5
-        imagePullPolicy: IfNotPresent
-        ports:
-        - name: http
-          containerPort: 8080
-          protocol: TCP
-        - name: http-metrics
-          containerPort: 8080
-          protocol: TCP
-        - name: grpc
-          containerPort: 8080
-          protocol: TCP
-        command:
-        - ./podinfo
-        - --port=80
-        - --port-metrics=8080
-        - --grpc-port=8080
-        - --grpc-service-name=podinfo
-        - --level=info
-        - --random-delay=false
-        - --random-error=false
-        env:
-        - name: PODINFO_UI_COLOR
-          value: "#34577c"
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 8080
-        readinessProbe:
-          httpGet:
-            path: /readyz
-            port: 8080
-        resources:
-          limits:
-            cpu: 1000m
-            memory: 128Mi
-          requests:
-            cpu: 10m
-            memory: 64Mi
+FROM nginx:latest
+MAINTAINER swapsstyle
+
+RUN apt-get update -y &&\
+    apt-get install nano -y
+COPY ./index.html ./usr/share/nginx/html
+
+EXPOSE 80
